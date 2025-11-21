@@ -5,6 +5,9 @@
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
 
+import os
+import zipfile
+import pandas as pd
 
 def pregunta_01():
     """
@@ -71,3 +74,42 @@ def pregunta_01():
 
 
     """
+
+    # Descomprimir el archivo input.zip
+    with zipfile.ZipFile("files/input.zip", "r") as z:
+        z.extractall("files/")
+    
+    # Construir datasets de train y test
+    def build_dataset(base_path):
+        data = []
+        targets = ["positive", "negative", "neutral"]
+        for target in targets:
+            target_path = os.path.join(base_path, target)
+
+            # Verificar que exista la carpeta
+            if not os.path.isdir(target_path):
+                continue
+
+            # Recorrer todos los .txt de esa carpeta
+            for filename in os.listdir(target_path):
+                if filename.endswith(".txt"):
+                    file_path = os.path.join(target_path, filename)
+                    # Leer el texto
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        phrase = f.read().strip()
+
+                    data.append({
+                        "phrase": phrase,
+                        "target": target
+                    })
+
+        return pd.DataFrame(data)
+
+
+    train_df = build_dataset("files/input/train")
+    test_df  = build_dataset("files/input/test")
+
+    # Guardar los datasets en archivos CSV en la carpeta output
+    os.makedirs("files/output", exist_ok=True)
+    train_df.to_csv("files/output/train_dataset.csv", index=True)
+    test_df.to_csv("files/output/test_dataset.csv", index=True)
